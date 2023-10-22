@@ -174,6 +174,8 @@ def init_colmap(args):
     scene_list = os.listdir(args.tnt_path)
 
     for scene in scene_list:
+        if not scene == 'Meetingroom':
+            continue
         scene_path = os.path.join(args.tnt_path, scene)
 
         if not os.path.exists(f"{scene_path}/images_raw"):
@@ -187,13 +189,26 @@ def init_colmap(args):
                 --SiftExtraction.use_gpu=true \
                 --SiftExtraction.num_threads=32 \
                 --ImageReader.single_camera=true"
-                  )
+                  )        
+        
+        # # extract features
+        # os.system(f"colmap feature_extractor --database_path {scene_path}/database.db \
+        #         --image_path {scene_path}/images_raw \
+        #         --ImageReader.camera_model=RADIAL \
+        #         --SiftExtraction.num_threads=32 \
+        #         --SiftExtraction.use_gpu=False \
+        #         --ImageReader.single_camera=true"
+        #           )
 
         # match features
         os.system(f"colmap sequential_matcher \
                 --database_path {scene_path}/database.db \
                 --SiftMatching.use_gpu=true"
                   )
+        # os.system(f"colmap sequential_matcher \
+        #         --database_path {scene_path}/database.db \
+        #         --SiftMatching.use_gpu=False"
+        #           )        
 
         # read poses
         poses = load_COLMAP_poses(os.path.join(scene_path, f'{scene}_COLMAP_SfM.log'),

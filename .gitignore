@@ -29,6 +29,9 @@ checkpoints
 *.pt
 *.bin
 *.ply
+*.pfm
+*.npy
+
 
 # log folder
 logs/

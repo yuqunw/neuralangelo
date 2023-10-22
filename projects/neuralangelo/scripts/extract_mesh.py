@@ -16,6 +16,13 @@ import os
 import sys
 import numpy as np
 from functools import partial
+import torch
+import multiprocessing as mp
+from tqdm import tqdm
+# import trimesh
+import open3d as o3d
+import pandas as pd
+from pyntcloud import PyntCloud
 
 sys.path.append(os.getcwd())
 from imaginaire.config import Config, recursive_update_strict, parse_cmdline_arguments  # noqa: E402
@@ -40,6 +47,20 @@ def parse_args():
     args, cfg_cmd = parser.parse_known_args()
     return args, cfg_cmd
 
+def generate_pc_from_mesh(mesh_path, pc_path):
+    mp.freeze_support()
+    data_mesh = o3d.io.read_triangle_mesh(mesh_path)
+
+    sampled_pc = data_mesh.sample_points_poisson_disk(number_of_points = 2000000, )
+    np_points = np.asarray(sampled_pc.points).astype(np.float32)
+
+    pointdata = pd.DataFrame({
+        'x': np_points[:, 0],
+        'y': np_points[:, 1],
+        'z': np_points[:, 2]
+    })
+    pointcloud = PyntCloud(pointdata)
+    pointcloud.to_file(str(pc_path))
 
 def main():
     args, cfg_cmd = parse_args()
@@ -89,6 +110,24 @@ def main():
     mesh = extract_mesh(sdf_func=sdf_func, bounds=bounds, intv=(2.0 / args.resolution),
                         block_res=args.block_res, texture_func=texture_func, filter_lcc=args.keep_lcc)
 
+
+    transform_path = os.path.join(cfg.data.root, 'transforms.json')
+    # Transform to world coordWinates
+    # First load true scale matrix
+    with open(transform_path, 'r') as f:
+        transforms = json.load(f)
+    center = np.array(transforms['pose_offset']).reshape(3,)
+    scale = transforms['pose_scale']      
+    true_scale_mat = np.eye(4).astype(np.float32)
+    true_scale_mat[:3, 3] = -center
+    true_scale_mat[:3 ] /= scale 
+
+    # Get the inverse of the true scale matrix, following monosdf definition
+    inv_true_scale_mat = np.linalg.inv(true_scale_mat)
+
+    # Apply the inverse of the true scale matrix to the mesh
+    mesh.apply_transform(inv_true_scale_mat)
+
     if is_master():
         print(f"vertices: {len(mesh.vertices)}")
         print(f"faces: {len(mesh.faces)}")
@@ -99,7 +138,8 @@ def main():
         mesh.update_faces(mesh.nondegenerate_faces())
         os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
         mesh.export(args.output_file)
-
+        pc_file = args.output_file.replace('mesh', 'pc')
+        generate_pc_from_mesh(args.output_file, pc_file)
 
 if __name__ == "__main__":
     main()

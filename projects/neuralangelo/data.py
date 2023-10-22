@@ -24,19 +24,23 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class Dataset(base.Dataset):
 
-    def __init__(self, cfg, is_inference=False):
+    def __init__(self, cfg, is_inference=False, is_test=False):
         super().__init__(cfg, is_inference=is_inference, is_test=False)
         cfg_data = cfg.data
         self.root = cfg_data.root
         self.preload = cfg_data.preload
         self.H, self.W = cfg_data.val.image_size if is_inference else cfg_data.train.image_size
-        meta_fname = f"{cfg_data.root}/transforms.json"
+        if not is_test:
+            meta_fname = f"{cfg_data.root}/transforms.json"
+        else:
+            meta_fname = f"{cfg_data.root}/transforms_test.json"
         with open(meta_fname) as file:
             self.meta = json.load(file)
         self.list = self.meta["frames"]
-        if cfg_data[self.split].subset:
-            subset = cfg_data[self.split].subset
-            subset_idx = np.linspace(0, len(self.list), subset+1)[:-1].astype(int)
+        if cfg_data[self.split].interval:
+            interval = cfg_data[self.split].interval
+            # Change subset_idx to the interval
+            subset_idx = np.arange(0, len(self.list), interval).astype(int)
             self.list = [self.list[i] for i in subset_idx]
         self.num_rays = cfg.model.render.rand_rays
         self.readjust = getattr(cfg_data, "readjust", None)
@@ -128,4 +132,24 @@ class Dataset(base.Dataset):
     def _gl_to_cv(self, gl):
         # convert to CV convention used in Imaginaire
         cv = gl * torch.tensor([1, -1, -1, 1])
+
+        # # For manual shift
+        # cv[:, 3] = cv[:, 3] + torch.tensor([0, 0.2, 0, 0])
+
+        # # Get rotation matrix
+        # R = torch.zeros_like(cv).to(cv.device)
+        # theta = torch.tensor([-90])
+        # # R[0, 0] = torch.cos(theta)
+        # # R[0, 2] = torch.sin(theta)
+        # # R[1, 1] = 1
+        # # R[2, 0] = -torch.sin(theta)
+        # # R[2, 2] = torch.cos(theta)
+        # # R[3, 3] = 1
+        # R[0, 0] = torch.cos(theta)
+        # R[0, 1] = -torch.sin(theta)
+        # R[2, 2] = 1
+        # R[1, 0] = torch.sin(theta)
+        # R[1, 1] = torch.cos(theta)
+        # R[3, 3] = 1        
+        # cv = torch.matmul(R, cv)
         return cv
