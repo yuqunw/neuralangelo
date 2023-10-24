@@ -174,7 +174,7 @@ def init_colmap(args):
     scene_list = os.listdir(args.tnt_path)
 
     for scene in scene_list:
-        if not scene == 'Meetingroom':
+        if scene == 'Meetingroom':
             continue
         scene_path = os.path.join(args.tnt_path, scene)
 
