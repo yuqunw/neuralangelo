@@ -1,0 +1,5 @@
+[default]
+entity = 3dvison
+project = tnt_meetingroom_neuralangelo_preprocessed
+base_url = https://api.wandb.ai
+

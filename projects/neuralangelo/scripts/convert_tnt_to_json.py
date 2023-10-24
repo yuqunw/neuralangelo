@@ -171,9 +171,12 @@ def compute_bound(pts):
 
 def init_colmap(args):
     assert args.tnt_path, "Provide path to Tanks and Temples dataset"
-    scene_list = os.listdir(args.tnt_path)
+    scene_list = sorted(os.listdir(args.tnt_path))
 
     for scene in scene_list:
+        print(f'processing scene:{scene}')
+        if (scene != "Barn") and (scene != "Courthouse") and (scene != "Ignatius"):
+            continue
         scene_path = os.path.join(args.tnt_path, scene)
 
         if not os.path.exists(f"{scene_path}/images_raw"):

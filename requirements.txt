@@ -33,3 +33,13 @@ termcolor
 tqdm
 trimesh
 wandb
+gpustat
+gdown
+pip
+numpy
+scipy
+ipython
+jupyterlab
+cython
+ninja
+diskcache

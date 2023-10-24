@@ -7,7 +7,6 @@ dependencies:
   # general
   - gpustat
   - gdown
-  - cudatoolkit-dev
   - cmake
   # python general
   - python=3.8
@@ -20,7 +19,5 @@ dependencies:
   - ninja
   - diskcache
   # pytorch
-  - pytorch
-  - torchvision
   - pip:
     - -r requirements.txt
