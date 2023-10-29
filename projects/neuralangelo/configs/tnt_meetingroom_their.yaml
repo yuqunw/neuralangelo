@@ -14,7 +14,7 @@ model:
     object:
         sdf:
             mlp:
-                inside_out: True
+                inside_out: True   # True for Meetingroom.
             encoding:
                 coarse2fine:
                     init_active_level: 8
@@ -24,16 +24,16 @@ model:
 
 data:
     type: projects.neuralangelo.data
-    root: datasets/eth3d_rescale/courtyard
-    num_images: 38  # The number of training images.
+    root: datasets/tnt_from_na/Meetingroom
+    num_images: 371  # The number of training images.
     train:
-        image_size: [640,960]
-        batch_size: 8
+        image_size: [835,1500]
+        batch_size: 1
         subset:
         interval:
     val:
-        image_size: [320,480]
+        image_size: [835,1500]
         batch_size: 1
         subset: 1
         max_viz_samples: 16
-        interval: 20
+        interval: 200

@@ -116,17 +116,17 @@ def main():
     # First load true scale matrix
     with open(transform_path, 'r') as f:
         transforms = json.load(f)
-    center = np.array(transforms['pose_offset']).reshape(3,)
-    scale = transforms['pose_scale']      
-    true_scale_mat = np.eye(4).astype(np.float32)
-    true_scale_mat[:3, 3] = -center
-    true_scale_mat[:3 ] /= scale 
+    # center = np.array(transforms['pose_offset']).reshape(3,)
+    # scale = transforms['pose_scale']      
+    # true_scale_mat = np.eye(4).astype(np.float32)
+    # true_scale_mat[:3, 3] = -center
+    # true_scale_mat[:3 ] /= scale 
 
-    # Get the inverse of the true scale matrix, following monosdf definition
-    inv_true_scale_mat = np.linalg.inv(true_scale_mat)
+    # # Get the inverse of the true scale matrix, following monosdf definition
+    # inv_true_scale_mat = np.linalg.inv(true_scale_mat)
 
     # Apply the inverse of the true scale matrix to the mesh
-    mesh.apply_transform(inv_true_scale_mat)
+    # mesh.apply_transform(inv_true_scale_mat)
 
     if is_master():
         print(f"vertices: {len(mesh.vertices)}")
