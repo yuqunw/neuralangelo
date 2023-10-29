@@ -356,7 +356,8 @@ class BaseTrainer(object):
             self.sched.step()
         elapsed_epoch_time = time.time() - self.start_epoch_time
         # Logging.
-        print('Epoch: {}, total time: {:6f}.'.format(current_epoch, elapsed_epoch_time))
+        if current_epoch % 100 == 0:
+            print('Epoch: {}, total time: {:6f}.'.format(current_epoch, elapsed_epoch_time))
         self.timer.time_epoch = elapsed_epoch_time
         self._end_of_epoch(data, current_epoch, current_iteration)
 

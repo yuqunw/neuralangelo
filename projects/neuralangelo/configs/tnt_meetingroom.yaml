@@ -24,11 +24,11 @@ model:
 
 data:
     type: projects.neuralangelo.data
-    root: datasets/tnt/Meetingroom
+    root: datasets/tnt_from_na/Meetingroom
     num_images: 371  # The number of training images.
     train:
         image_size: [835,1500]
-        batch_size: 1
+        batch_size: 16
         subset:
     val:
         image_size: [300,540]
