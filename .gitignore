@@ -29,9 +29,11 @@ checkpoints
 *.pt
 *.bin
 *.ply
+*.pfm 
 
 # log folder
 logs/
+evaluation/
 
 # dataset folder
 datasets/
