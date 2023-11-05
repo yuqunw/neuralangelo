@@ -208,6 +208,8 @@ def parse_cmdline_arguments(args):
     """
     cfg_cmd = {}
     for arg in args:
+        print(args)
+        print(arg)
         assert arg.startswith("--")
         if "=" not in arg[2:]:
             key_str, value = (arg[2:-1], "false") if arg[-1] == "!" else (arg[2:], "true")

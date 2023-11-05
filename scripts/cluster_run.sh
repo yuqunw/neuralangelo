@@ -1,6 +1,6 @@
 #!/bin/bash
-run_name="monosdf_eth3d_smaller_bias"
-echo "Args provided: $1 $2"
+run_name="neuralangelo_eth3d"
+echo "Args provided: $1 $2 $3"
 scene=$1
 if [[ $2 == "--with_full" ]]; then
     with_full=True
@@ -8,28 +8,42 @@ if [[ $2 == "--with_full" ]]; then
 else
     with_full=False
 fi
+img_count=$3
+
+
+
 
 echo "Running with run name ${run_name}"
 MOUNT_DIR="/home/yuqunwu2/large_scale_nerf/data/$(hostname -s)"
-DATA_DIR="${MOUNT_DIR}/eth3d_processed_monosdf"
+DATA_DIR="${MOUNT_DIR}/eth3d_neuralangelo"
 GT_DIR="${MOUNT_DIR}/eth3d_ground_truths"
 CHECKPOINT_DIR="${MOUNT_DIR}/${run_name}"
 mkdir -p $CHECKPOINT_DIR
 rm -r "${CHECKPOINT_DIR}/${scene}"
 
-cd /home/yuqunwu2/large_scale_nerf/monosdf/code
+cd /home/yuqunwu2/large_scale_nerf/neuralangelo
 
-python training/exp_runner.py --scan_id ${scene} \
-                              --full ${with_full} \
-                              --expname ${scene} \
-                              --data_root ${MOUNT_DIR} \
-                              --exps_folder ${run_name}
+EXPERIMENT="eth3d_courtyard"
+CONFIG=projects/neuralangelo/configs/${EXPERIMENT}.yaml
 
 
-python evaluation/generate_img_mesh.py --checkpoint "${MOUNT_DIR}/${run_name}/${scene}/checkpoints/ModelParameters/latest.pth" \
-                                       --evals_folder "${MOUNT_DIR}/${run_name}/${scene}/output" \
-                                       --scan_id ${scene} \
-                                       --data_root ${MOUNT_DIR}
+python train.py --data.root="${DATA_DIR}/${scene}" \
+                --data.num_images=${img_count} \
+                --max_iter=200000 \
+                --config ${CONFIG} \
+                --logdir="${CHECKPOINT_DIR}/${scene}" \
+                --single_gpu \
+                --wandb \
+                --wandb_name "eth3d_neuralangelo_${scene}"
+
+python projects/neuralangelo/scripts/extract_mesh_cluster.py \
+                            --checkpoint_txt "${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt" \
+                            --config=${CONFIG} \
+                            --data.root="${DATA_DIR}/${scene}" \
+                            --data.num_images=${img_count} \
+                            --single_gpu \
+                            --output_file "${CHECKPOINT_DIR}/${scene}/output/mesh.ply" \
+                            --textured
 
 # python evaluation/evaluate_single_scene.py --input_path "${DATA_DIR}/${scene}" \
 #                          --output_path "${CHECKPOINT_DIR}/${scene}/output" \
@@ -39,8 +53,8 @@ cd ${CHECKPOINT_DIR}/${scene}/
 zip -r "${scene}.zip" "output"
 
 result_dirname="ablations"
-ssh jae "mkdir -p /mnt/data1/cluster_results/${result_dirname}/${run_name}"
-ssh jae "mkdir -p /mnt/data1/eth3d_outputs/${result_dirname}/${run_name}/${scene}"
-scp "${scene}.zip" jae:/mnt/data1/cluster_results/${result_dirname}/${run_name}/
-ssh jae "cd /mnt/data1/cluster_results/${result_dirname}/${run_name}/ && unzip ${scene}.zip -d /mnt/data1/eth3d_outputs/${result_dirname}/${run_name}/${scene}"
+ssh yuqun "mkdir -p /mnt/data/cluster_results/${result_dirname}/${run_name}"
+ssh yuqun "mkdir -p /mnt/data/eth3d_outputs/${result_dirname}/${run_name}/${scene}"
+scp "${scene}.zip" yuqun:/mnt/data/cluster_results/${result_dirname}/${run_name}/
+ssh yuqun "cd /mnt/data/cluster_results/${result_dirname}/${run_name}/ && unzip ${scene}.zip -d /mnt/data/eth3d_outputs/${result_dirname}/${run_name}/${scene}"
 

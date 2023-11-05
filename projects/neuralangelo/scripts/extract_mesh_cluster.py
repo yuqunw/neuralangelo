@@ -23,6 +23,7 @@ from tqdm import tqdm
 import open3d as o3d
 import pandas as pd
 from pyntcloud import PyntCloud
+from pathlib import Path
 
 sys.path.append(os.getcwd())
 from imaginaire.config import Config, recursive_update_strict, parse_cmdline_arguments  # noqa: E402
@@ -35,7 +36,7 @@ from projects.neuralangelo.utils.mesh import extract_mesh, extract_texture  # no
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument("--config", required=True, help="Path to the training config file.")
-    parser.add_argument("--checkpoint", default="", help="Checkpoint path.")
+    parser.add_argument("--checkpoint_txt", default="", help="Checkpoint txt containing path.")
     parser.add_argument('--local_rank', type=int, default=os.getenv('LOCAL_RANK', 0))
     parser.add_argument('--single_gpu', action='store_true')
     parser.add_argument("--resolution", default=2048, type=int, help="Marching cubes resolution")
@@ -84,7 +85,10 @@ def main():
     # Initialize data loaders and models.
     trainer = get_trainer(cfg, is_inference=True, seed=0)
     # Load checkpoint.
-    trainer.checkpointer.load(args.checkpoint, load_opt=False, load_sch=False)
+    with open(args.checkpoint_txt, 'r') as f:
+        checkpoint_name = f.readline()
+    checkpoint_path = str(Path(args.checkpoint_txt).parents[0] / checkpoint_name)
+    trainer.checkpointer.load(checkpoint_path, load_opt=False, load_sch=False)
     trainer.model.eval()
 
     # Set the coarse-to-fine levels.
@@ -116,8 +120,8 @@ def main():
     # First load true scale matrix
     with open(transform_path, 'r') as f:
         transforms = json.load(f)
-    center = np.array(transforms['pose_offset']).reshape(3,)
-    scale = transforms['pose_scale']      
+    center = np.array(transforms['sphere_center']).reshape(3,)
+    scale = transforms['sphere_radius']      
     true_scale_mat = np.eye(4).astype(np.float32)
     true_scale_mat[:3, 3] = -center
     true_scale_mat[:3 ] /= scale 
