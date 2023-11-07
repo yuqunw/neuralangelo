@@ -115,7 +115,7 @@ class BaseTrainer(BaseTrainer):
         super().train(cfg, data_loader, single_gpu, profile, show_pbar)
 
     @torch.no_grad()
-    def test(self, data_loader, output_dir=None, inference_args=None, mode="test", show_pbar=False):
+    def test(self, data_loader, output_dir=None, inference_args=None, mode="test", show_pbar=False, only_visualize=False):
         """The evaluation/inference engine.
         Args:
             data_loader: The data loader.
@@ -135,12 +135,14 @@ class BaseTrainer(BaseTrainer):
         data_batches = []
         for it, data in enumerate(data_loader):
             data = self.start_of_iteration(data, current_iteration=self.current_iteration)
-            output = model.inference(data)
+            output = model.inference(data, only_visualize)
             data.update(output)
             data_batches.append(data)
         # Aggregate the data from all devices and process the results.
         data_gather = collate_test_data_batches(data_batches)
         # Only the master process should process the results; slaves will just return.
+        if only_visualize:
+            return data_gather        
         if is_master():
             data_all = get_unique_test_data(data_gather, data_gather["idx"])
             tqdm.write(f"Evaluating with {len(data_all['idx'])} samples.")

@@ -104,7 +104,8 @@ def main():
     # Start training.
     output = trainer.test(trainer.eval_data_loader,
                  mode = 'val',
-                  show_pbar=args.show_pbar) # save files
+                  show_pbar=args.show_pbar,
+                   only_visualize = True) # save files
 
     # output_path = Path(args.output_path)
     # output_path.mkdir(parents=True, exist_ok=True)
@@ -162,7 +163,7 @@ def main():
 
         np_image = (image.permute(1,2,0).cpu().numpy() * 255).astype(np.uint8)
         Image.fromarray(np_image).save(image_path)
-        cv2.imwrite(depth_path, depth.cpu().numpy())
+        cv2.imwrite(depth_path, depth.cpu().numpy()[0])
         normal = NF.normalize(normal, dim=0, p=2)
         np_normal = ((normal * 0.5 + 0.5).permute(1,2,0).cpu().numpy() * 255).astype(np.uint8)
         Image.fromarray(np_normal).save(normal_path)

@@ -71,7 +71,7 @@ class Model(BaseModel):
         return output
 
     @torch.no_grad()
-    def inference(self, data):
+    def inference(self, data, only_visualize = False):
         self.eval()
         # Render the full images.
         output = self.render_image(data["pose"], data["intr"], image_size=self.image_size_val,
@@ -85,6 +85,16 @@ class Model(BaseModel):
             depth_map=self.to_full_val_image(output["depth"]),  # [B,1,H,W]
             normal_map=self.to_full_val_image(normal_cam),  # [B,3,H,W]
         )
+        
+        if only_visualize:
+            # Remove the gradient
+            output.pop("gradient")
+            output.pop('dists')
+            output.pop('weights')
+            output.pop('gradients')
+
+
+
         return output
 
     def render_image(self, pose, intr, image_size, stratified=False, sample_idx=None):
