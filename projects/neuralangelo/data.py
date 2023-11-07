@@ -30,7 +30,10 @@ class Dataset(base.Dataset):
         self.root = cfg_data.root
         self.preload = cfg_data.preload
         self.H, self.W = cfg_data.val.image_size if is_inference else cfg_data.train.image_size
-        meta_fname = f"{cfg_data.root}/transforms.json"
+        if cfg_data.full:
+            meta_fname = f"{cfg_data.root}/transforms.json"
+        else:
+            meta_fname = f"{cfg_data.root}/transforms_train.json"
         with open(meta_fname) as file:
             self.meta = json.load(file)
         self.list = self.meta["frames"]

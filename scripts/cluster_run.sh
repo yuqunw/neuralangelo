@@ -5,8 +5,10 @@ scene=$1
 if [[ $2 == "--with_full" ]]; then
     with_full=True
     run_name+="_full"
+    show_full="_full"
 else
     with_full=False
+    show_full="unfull"
 fi
 img_count=$3
 
@@ -26,15 +28,37 @@ cd /home/yuqunwu2/large_scale_nerf/neuralangelo
 EXPERIMENT="eth3d_courtyard"
 CONFIG=projects/neuralangelo/configs/${EXPERIMENT}.yaml
 
+echo "python train.py --data.root=${DATA_DIR}/${scene} \
+                --data.num_images=${img_count} \
+                --data.full=${with_full} \
+                --max_iter=200000 \
+                --config ${CONFIG} \
+                --logdir=${CHECKPOINT_DIR}/${scene} \
+                --single_gpu \
+                --wandb \
+                --wandb_name eth3d_neuralangelo_${scene}${show_full} \
+                --checkpoint.save_iter=100000 "
 
 python train.py --data.root="${DATA_DIR}/${scene}" \
                 --data.num_images=${img_count} \
+                --data.full=${with_full} \
                 --max_iter=200000 \
                 --config ${CONFIG} \
                 --logdir="${CHECKPOINT_DIR}/${scene}" \
                 --single_gpu \
                 --wandb \
-                --wandb_name "eth3d_neuralangelo_${scene}"
+                --wandb_name "eth3d_neuralangelo_${scene}${show_full}" \
+                --checkpoint.save_iter=100000
+
+
+echo "python projects/neuralangelo/scripts/extract_mesh_cluster.py \
+                            --checkpoint_txt ${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt \
+                            --config=${CONFIG} \
+                            --data.root=${DATA_DIR}/${scene} \
+                            --data.num_images=${img_count} \
+                            --single_gpu \
+                            --output_file ${CHECKPOINT_DIR}/${scene}/output/results/mesh.ply \
+                            --textured"
 
 python projects/neuralangelo/scripts/extract_mesh_cluster.py \
                             --checkpoint_txt "${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt" \
@@ -42,12 +66,29 @@ python projects/neuralangelo/scripts/extract_mesh_cluster.py \
                             --data.root="${DATA_DIR}/${scene}" \
                             --data.num_images=${img_count} \
                             --single_gpu \
-                            --output_file "${CHECKPOINT_DIR}/${scene}/output/mesh.ply" \
+                            --output_file "${CHECKPOINT_DIR}/${scene}/output/results/mesh.ply" \
                             --textured
 
-# python evaluation/evaluate_single_scene.py --input_path "${DATA_DIR}/${scene}" \
-#                          --output_path "${CHECKPOINT_DIR}/${scene}/output" \
-#                          --gt_path "${GT_DIR}/${scene}" 
+echo "python validate.py --data.root=${DATA_DIR}/${scene} \
+                   --data.num_images=${img_count} \
+                   --checkpoint_txt ${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt \
+                   --config ${CONFIG} \
+                   --single_gpu \
+                   --output_dir ${CHECKPOINT_DIR}/${scene}/output/ \
+                   --show_pbar"
+
+python validate.py --data.root="${DATA_DIR}/${scene}" \
+                   --data.num_images=${img_count} \
+                   --checkpoint_txt "${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt" \
+                   --config ${CONFIG} \
+                   --single_gpu \
+                   --output_dir "${CHECKPOINT_DIR}/${scene}/output/" \
+                   --show_pbar
+
+
+# # python scripts/report.py --input_path "${DATA_DIR}/${scene}" \
+# #                          --output_path "${CHECKPOINT_DIR}/${scene}/output" \
+# #                          --gt_path "${GT_DIR}/${scene}" 
 
 cd ${CHECKPOINT_DIR}/${scene}/
 zip -r "${scene}.zip" "output"

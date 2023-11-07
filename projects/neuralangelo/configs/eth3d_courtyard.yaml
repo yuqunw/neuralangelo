@@ -24,8 +24,8 @@ model:
 
 data:
     type: projects.neuralangelo.data
-    root: datasets/eth3d_neuralangelo/courtyard
-    num_images: 38  # The number of training images.
+    root: datasets/eth3d_neuralangelo/wrong_for_test
+    num_images: 12345  # The number of training images.
     train:
         image_size: [640,960]
         batch_size: 4
@@ -35,3 +35,4 @@ data:
         batch_size: 1
         subset: 1
         max_viz_samples: 16
+    full: True

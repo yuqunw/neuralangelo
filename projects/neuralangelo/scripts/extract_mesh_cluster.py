@@ -20,7 +20,7 @@ import torch
 import multiprocessing as mp
 from tqdm import tqdm
 # import trimesh
-import open3d as o3d
+# import open3d as o3d
 import pandas as pd
 from pyntcloud import PyntCloud
 from pathlib import Path
@@ -86,7 +86,7 @@ def main():
     trainer = get_trainer(cfg, is_inference=True, seed=0)
     # Load checkpoint.
     with open(args.checkpoint_txt, 'r') as f:
-        checkpoint_name = f.readline()
+        checkpoint_name = f.readline()[:-1]
     checkpoint_path = str(Path(args.checkpoint_txt).parents[0] / checkpoint_name)
     trainer.checkpointer.load(checkpoint_path, load_opt=False, load_sch=False)
     trainer.model.eval()
@@ -142,8 +142,8 @@ def main():
         mesh.update_faces(mesh.nondegenerate_faces())
         os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
         mesh.export(args.output_file)
-        pc_file = args.output_file.replace('mesh', 'pc')
-        generate_pc_from_mesh(args.output_file, pc_file)
+        pc_file = args.output_file.replace('mesh', 'fused')
+        # generate_pc_from_mesh(args.output_file, pc_file)
 
 if __name__ == "__main__":
     main()
