@@ -1,6 +1,6 @@
 #!/bin/bash
 run_name="neuralangelo_eth3d"
-echo "Args provided: $1 $2 $3"
+echo "Args provided: $1 $2 $3 $4"
 scene=$1
 if [[ $2 == "--with_full" ]]; then
     with_full=True
@@ -11,7 +11,7 @@ else
     show_full="unfull"
 fi
 img_count=$3
-
+full_img_count=$4
 
 
 
@@ -37,7 +37,8 @@ echo "python train.py --data.root=${DATA_DIR}/${scene} \
                 --single_gpu \
                 --wandb \
                 --wandb_name eth3d_neuralangelo_${scene}${show_full} \
-                --checkpoint.save_iter=100000 "
+                --checkpoint.save_iter=100000 \
+                --model.appear_embed.enabled=False"
 
 python train.py --data.root="${DATA_DIR}/${scene}" \
                 --data.num_images=${img_count} \
@@ -48,42 +49,47 @@ python train.py --data.root="${DATA_DIR}/${scene}" \
                 --single_gpu \
                 --wandb \
                 --wandb_name "eth3d_neuralangelo_${scene}${show_full}" \
-                --checkpoint.save_iter=100000
+                --checkpoint.save_iter=100000 \
+                --model.appear_embed.enabled=False
 
 
 echo "python projects/neuralangelo/scripts/extract_mesh_cluster.py \
                             --checkpoint_txt ${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt \
                             --config=${CONFIG} \
                             --data.root=${DATA_DIR}/${scene} \
-                            --data.num_images=${img_count} \
+                            --data.num_images=${full_img_count} \
                             --single_gpu \
                             --output_file ${CHECKPOINT_DIR}/${scene}/output/results/mesh.ply \
-                            --textured"
+                            --textured \
+                            --model.appear_embed.enabled=False"
 
 python projects/neuralangelo/scripts/extract_mesh_cluster.py \
                             --checkpoint_txt "${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt" \
                             --config=${CONFIG} \
                             --data.root="${DATA_DIR}/${scene}" \
-                            --data.num_images=${img_count} \
+                            --data.num_images=${full_img_count} \
                             --single_gpu \
                             --output_file "${CHECKPOINT_DIR}/${scene}/output/results/mesh.ply" \
-                            --textured
+                            --textured \
+                            --model.appear_embed.enabled=False
 
 echo "python validate.py --data.root=${DATA_DIR}/${scene} \
-                   --data.num_images=${img_count} \
+                   --data.num_images=${full_img_count} \
                    --checkpoint_txt ${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt \
                    --config ${CONFIG} \
                    --single_gpu \
                    --output_dir ${CHECKPOINT_DIR}/${scene}/output/ \
-                   --show_pbar"
+                   --show_pbar \
+                   --model.appear_embed.enabled=False"
 
 python validate.py --data.root="${DATA_DIR}/${scene}" \
-                   --data.num_images=${img_count} \
+                   --data.num_images=${full_img_count} \
                    --checkpoint_txt "${CHECKPOINT_DIR}/${scene}/latest_checkpoint.txt" \
                    --config ${CONFIG} \
                    --single_gpu \
                    --output_dir "${CHECKPOINT_DIR}/${scene}/output/" \
-                   --show_pbar
+                   --show_pbar \
+                   --model.appear_embed.enabled=False
 
 
 # # python scripts/report.py --input_path "${DATA_DIR}/${scene}" \

@@ -120,12 +120,11 @@ def main():
     # First load true scale matrix
     with open(transform_path, 'r') as f:
         transforms = json.load(f)
-    center = np.array(transforms['sphere_center']).reshape(3,)
-    scale = transforms['sphere_radius']      
+    center = np.array(transforms['pose_offset']).reshape(3,)
+    scale = transforms['pose_scale']      
     true_scale_mat = np.eye(4).astype(np.float32)
     true_scale_mat[:3, 3] = -center
     true_scale_mat[:3 ] /= scale 
-
     # Get the inverse of the true scale matrix, following monosdf definition
     inv_true_scale_mat = np.linalg.inv(true_scale_mat)
 
@@ -138,8 +137,8 @@ def main():
         if args.textured:
             print(f"colors: {len(mesh.visual.vertex_colors)}")
         # center and scale
-        mesh.vertices = mesh.vertices * meta["sphere_radius"] + np.array(meta["sphere_center"])
-        mesh.update_faces(mesh.nondegenerate_faces())
+        # mesh.vertices = mesh.vertices * meta["sphere_radius"] + np.array(meta["sphere_center"])
+        # mesh.update_faces(mesh.nondegenerate_faces())
         os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
         mesh.export(args.output_file)
         pc_file = args.output_file.replace('mesh', 'fused')
